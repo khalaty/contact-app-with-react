@@ -56,9 +56,13 @@
     padding: 10px;
     border-radius: 10px;
 }
-.removebutton button{
-    background-color: black;
+.showbutton{
+    background-color: rgb(27, 10, 121);
     color: #fff;
+    outline: 0px;
+    border: 0px;
+    align-self: flex-start;
+    margin-bottom: 20px;
 }
 .search {
     width: 100%;

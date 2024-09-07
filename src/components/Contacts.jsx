@@ -22,6 +22,7 @@ function Contacts() {
     email: "",
     phone: "",
   });
+  const [showList, setShowList] = useState(false); // State to control list visibility
 
   const isValidForm = () => {
     const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
@@ -88,7 +89,10 @@ function Contacts() {
     setEditContactId(null);
   };
 
-  // Render based on edit mode
+  const toggleShowList = () => {
+    setShowList(!showList);
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.form}>
@@ -109,8 +113,8 @@ function Contacts() {
         )}
       </div>
       <div className={styles.alert}>{alert && <p>{alert}</p>}</div>
-      <button className={styles.removebutton} onClick={() => setContacts([])}>Clear All Contacts</button>
-      <ContactsList contacts={contacts} deletHandler={deleteHandler} editHandler={editHandler} />
+      <button className={styles.showbutton} onClick={toggleShowList}>{showList ? "Hide Contacts" : "Show Contacts"}</button>
+      {showList && <ContactsList contacts={contacts} deletHandler={deleteHandler} editHandler={editHandler} />}
     </div>
   );
 }
