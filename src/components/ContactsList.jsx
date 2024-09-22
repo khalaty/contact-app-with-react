@@ -2,7 +2,7 @@ import React from 'react';
 import ContactsItem from './ContactsItem.jsx';
 import styles from './ContactList.module.css';
 
-function ContactsList({ contacts, deletHandler, editHandler }) {
+function ContactsList({ contacts, deleteHandler, editHandler }) {
   return (
     <div className={styles.container}>
       <h3>Our Contacts:</h3>
@@ -12,13 +12,13 @@ function ContactsList({ contacts, deletHandler, editHandler }) {
             <ContactsItem
               key={contact.id}
               data={contact}
-              deletHandler={deletHandler}
+              deleteHandler={deleteHandler}
               editHandler={editHandler}
             />
           ))}
         </ul>
       ) : (
-        <p className={styles.message}>No Contact Yet!</p>
+        <p className={styles.message}>No Contacts Found!</p>
       )}
     </div>
   );

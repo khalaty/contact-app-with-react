@@ -1,16 +1,19 @@
-import React, { useState } from 'react'
+import React from 'react'
+// import React, { useState } from 'react'
+
 import './global.css'
+
 import Header from './components/Header.jsx'
 import Contacts from './components/Contacts.jsx'
+import { ContactProvider } from './ContactContext.jsx'
 
 function App() {
-
   return (
-    <>
-    <Header />
-    <Contacts />
-    </>
+    <ContactProvider>
+      <Header />
+      <Contacts />
+    </ContactProvider>
   )
 }
 
-export default App
+export default App;

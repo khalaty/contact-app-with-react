@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ContactsList from './ContactsList.jsx';
 import { v4 } from 'uuid';
 import styles from "./Contacts.module.css";
+import { useContacts } from '../ContactContext';
 
 const inputs = [
   { type: "text", name: "firstName", placeholder: "Firstname" },
@@ -11,29 +12,19 @@ const inputs = [
 ];
 
 function Contacts() {
-  const [contacts, setContacts] = useState([]);
-  const [alert, setAlert] = useState("");
-  const [isEdit, setIsEdit] = useState(false); // Flag for edit mode
-  const [editContactId, setEditContactId] = useState(null); // ID of contact being edited
-  const [contact, setContact] = useState({
-    id: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
-  const [showList, setShowList] = useState(false); // State to control list visibility
+  const { state, dispatch } = useContacts();
+  const { contacts, currentContact, isEditing, alert, showList, searchTerm } = state;
 
   const isValidForm = () => {
     const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     return requiredFields.every((field) => {
-      if (!contact[field]) {
+      if (!currentContact[field]) {
         return false;
       }
 
-      if (field === 'email' && !emailRegex.test(contact[field])) {
+      if (field === 'email' && !emailRegex.test(currentContact[field])) {
         return false;
       }
 
@@ -42,56 +33,58 @@ function Contacts() {
   };
 
   const changeHandler = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setContact((contact) => ({ ...contact, [name]: value }));
+    const { name, value } = event.target;
+    dispatch({ type: 'SET_CURRENT_CONTACT', payload: { ...currentContact, [name]: value } });
   };
 
   const addHandler = () => {
     if (!isValidForm()) {
-      setAlert("Please fill in all required fields and ensure email is valid.");
+      dispatch({ type: 'SET_ALERT', payload: "Please fill in all required fields and ensure email is valid." });
       return;
     }
-    setAlert("");
-    const newContact = { ...contact, id: v4() };
-    setContacts((contacts) => [...contacts, newContact]);
-    setContact({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-    });
+    dispatch({ type: 'SET_ALERT', payload: "" });
+    const newContact = { ...currentContact, id: v4() };
+    dispatch({ type: 'ADD_CONTACT', payload: newContact });
+    dispatch({ type: 'CLEAR_CURRENT_CONTACT' });
   };
 
   const deleteHandler = (id) => {
-    const newContacts = contacts.filter((contact) => contact.id !== id);
-    setContacts(newContacts);
+    dispatch({ type: 'DELETE_CONTACT', payload: id });
   };
 
   const editHandler = (id) => {
-    setIsEdit(true);
-    setEditContactId(id);
     const editingContact = contacts.find((contact) => contact.id === id);
-    setContact(editingContact);
+    dispatch({ type: 'SET_CURRENT_CONTACT', payload: editingContact });
+    dispatch({ type: 'SET_EDITING', payload: true });
   };
 
   const saveEditHandler = () => {
     if (!isValidForm()) {
-      setAlert("Please fill in all required fields and ensure email is valid.");
+      dispatch({ type: 'SET_ALERT', payload: "Please fill in all required fields and ensure email is valid." });
       return;
     }
-    setAlert("");
-    const updatedContacts = contacts.map((contact) =>
-      contact.id === editContactId ? contact : { ...contact }
+    dispatch({ type: 'SET_ALERT', payload: "" });
+    const updatedContacts = contacts.map((c) =>
+      c.id === currentContact.id ? currentContact : c
     );
-    setContacts(updatedContacts);
-    setIsEdit(false);
-    setEditContactId(null);
+    dispatch({ type: 'SET_CONTACTS', payload: updatedContacts });
+    dispatch({ type: 'SET_EDITING', payload: false });
+    dispatch({ type: 'CLEAR_CURRENT_CONTACT' });
   };
 
   const toggleShowList = () => {
-    setShowList(!showList);
+    dispatch({ type: 'TOGGLE_SHOW_LIST' });
   };
+
+  const handleSearch = (event) => {
+    dispatch({ type: 'SET_SEARCH_TERM', payload: event.target.value });
+  };
+
+  const filteredContacts = contacts.filter((contact) =>
+    Object.values(contact).some((value) =>
+      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   return (
     <div className={styles.container}>
@@ -102,19 +95,36 @@ function Contacts() {
             type={input.type}
             placeholder={input.placeholder}
             name={input.name}
-            value={contact[input.name]}
+            value={currentContact[input.name]}
             onChange={changeHandler}
           />
         ))}
-        {isEdit ? (
+        {isEditing ? (
           <button onClick={saveEditHandler}>Save Edit</button>
         ) : (
           <button onClick={addHandler}>Add Contact</button>
         )}
       </div>
       <div className={styles.alert}>{alert && <p>{alert}</p>}</div>
-      <button className={styles.showbutton} onClick={toggleShowList}>{showList ? "Hide Contacts" : "Show Contacts"}</button>
-      {showList && <ContactsList contacts={contacts} deletHandler={deleteHandler} editHandler={editHandler} />}
+      <button className={styles.showbutton} onClick={toggleShowList}>
+        {showList ? "Hide Contacts" : "Show Contacts"}
+      </button>
+      {showList && (
+        <>
+          <input
+            type="text"
+            placeholder="Search contacts..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className={styles.searchInput}
+          />
+          <ContactsList
+            contacts={filteredContacts}
+            deleteHandler={deleteHandler}
+            editHandler={editHandler}
+          />
+        </>
+      )}
     </div>
   );
 }
